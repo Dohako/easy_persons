@@ -1,0 +1,321 @@
+{% extends 'layout.html' %} {% include 'header.html' %} {% block title %} Home
+{% endblock %} {% block body %}
+
+<!-- 
+Проблемы:
+1. составляющие запроса передаются в строке как uri
+2. можно отправить форму обновления без заполнения поля
+3. проверка на required стоит, но форма все равно отправляет данные 
+
+-->
+<div class="container">
+  <div class="row">
+    <div class="col md-12">
+      <div class="jumbotron">
+        <form class="row g-3 mb-5 mt-1" id="myForm">
+          <div class="col-2">
+            <label for="first_name" class="visually-hidden">First Name</label>
+            <input
+              name="first_name"
+              type="text"
+              class="form-control"
+              id="first_name"
+              placeholder="Enter persons First Name"
+              required="required"
+            />
+          </div>
+          <div class="col-2">
+            <label for="last_name" class="visually-hidden">Last Name</label>
+            <input
+              name="last_name"
+              type="text"
+              class="form-control"
+              id="last_name"
+              placeholder="Enter persons Last Name"
+            />
+          </div>
+          <div class="col-2">
+            <label for="email" class="visually-hidden">Email</label>
+            <input
+              name="email"
+              type="text"
+              class="form-control"
+              id="email"
+              placeholder="Enter persons email"
+            />
+          </div>
+          <div class="col-2">
+            <label for="status" class="visually-hidden">Status</label>
+            <input
+              name="status"
+              type="text"
+              class="form-control"
+              id="status"
+              placeholder="Admin / User"
+            />
+          </div>
+          <div class="col-2 mt-2">
+            <button id="add_button" type="submit" class="btn btn-primary mt-4">
+              Add Person
+            </button>
+          </div>
+          <div class="col-2 mt-2">
+            <button
+              id="log_out_button"
+              type="button"
+              class="btn btn-primary mt-4"
+            >
+              Log out
+            </button>
+          </div>
+        </form>
+
+        <form class="row g-3 mb-5 mt-1" id="updateForm">
+          <div class="col-1">
+            <label for="update_id" class="visually-hidden">ID</label>
+            <input
+              name="update_id"
+              type="text"
+              class="form-control"
+              id="update_id"
+              required="required"
+            />
+          </div>
+          <div class="col-2">
+            <label for="update_first_name" class="visually-hidden"
+              >Update First Name</label
+            >
+            <input
+              name="update_first_name"
+              type=""
+              class="form-control update_first_name"
+              id="update_first_name"
+            />
+          </div>
+          <div class="col-2">
+            <label for="update_last_name" class="visually-hidden"
+              >Update Last Name</label
+            >
+            <input
+              name="update_last_name"
+              type=""
+              class="form-control update_last_name"
+              id="update_last_name"
+            />
+          </div>
+          <div class="col-2">
+            <label for="update_email" class="visually-hidden"
+              >Update Email</label
+            >
+            <input
+              name="update_email"
+              type=""
+              class="form-control update_email"
+              id="update_email"
+            />
+          </div>
+          <div class="col-2">
+            <label for="update_status" class="visually-hidden"
+              >Update Status</label
+            >
+            <input
+              name="update_status"
+              type=""
+              class="form-control update_status"
+              id="update_status"
+            />
+          </div>
+          <div class="col-3 mt-2">
+            <button
+              id="update_button"
+              type="submit"
+              class="btn btn-primary mt-4"
+            >
+              Update Person
+            </button>
+          </div>
+        </form>
+
+        <table class="table" id="data_table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>First Name</th>
+              <th>Last Name</th>
+              <th>Email</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {%for person in persons%}
+            <tr>
+              <td>{{person.id}}</td>
+              <td>{{person.first_name}}</td>
+              <td>{{person.last_name}}</td>
+              <td>{{person.email}}</td>
+              <td>{{person.status}}</td>
+              <td>
+                <!-- <a class="btn btn-warning btn-xs edit_button" id="{{person.id}}"
+                  >Edit</a
+                > -->
+                <a
+                  class="btn btn-danger btn-xs delete_button"
+                  id="{{person.id}}"
+                  >Delete</a
+                >
+              </td>
+            </tr>
+            {%endfor%}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+  $(document).ready(function () {
+    var id;
+    var first_name;
+    var last_name;
+    var email;
+    var status;
+
+    $("#log_out_button").click(function () {
+      $.ajax({
+        url: "/logout",
+        type: "GET",
+        dataType: "json",
+        contentType: "application/json",
+        // statusCode: function (response) {
+        //   window.location.href = "/login";
+        // },
+        success: function (response) {
+          var jsonData = JSON.parse(JSON.stringify(response));
+          window.location.href = "/login";
+        },
+        error: function (response) {
+          console.log(response);
+        },
+      });
+    });
+
+    $("#add_button").click(function () {
+      first_name = $("#first_name").val();
+      last_name = $("#last_name").val();
+      email = $("#email").val();
+      status = $("#status").val();
+
+      var data = JSON.stringify({
+        first_name: first_name,
+        last_name: last_name,
+        email: email,
+        status: status,
+      });
+      // data = $(this).serialize()
+      console.log(data);
+      // data = JSON.parse(data)
+      // console.log(data)
+
+      $.ajax({
+        url: "/person",
+        type: "POST",
+        dataType: "json",
+        contentType: "application/json",
+        // data: JSON.stringify({
+        //   first_name: first_name,
+        //   last_name: last_name,
+        //   email: email,
+        //   status: status,
+        // }),
+        data: data,
+        success: function (data) {
+          console.log("success", data);
+          setTimeout(location.reload, 300);
+        },
+        error: function () {
+          console.log("error", data);
+          alert("error loading from database...");
+        },
+      }); //.then(setTimeout(location.reload.bind(location), 200000));
+    });
+
+    $(".edit_button").click(function (id) {
+      id = this.id;
+
+      $.ajax({
+        url: "/person/" + id,
+        type: "post",
+        dataType: "json",
+        contentType: "application/json",
+        success: function (data) {
+          $($("#updateForm")[0].update_id).val(data.id);
+          $($("#updateForm")[0].update_first_name).val(data.first_name);
+          $($("#updateForm")[0].update_last_name).val(data.last_name);
+          $($("#updateForm")[0].update_email).val(data.email);
+          $($("#updateForm")[0].update_status).val(data.status);
+          setTimeout(location.reload, 300);
+          console.log(data);
+        },
+        error: function (data) {
+          console.log("error", data);
+          alert("error loading from database...");
+        },
+      });
+    });
+    $("#update_button").click(function (id) {
+      console.log(id);
+      id = $("#update_id").val();
+      update_first_name = $("#update_first_name").val();
+      update_last_name = $("#update_last_name").val();
+      update_email = $("#update_email").val();
+      update_status = $("#update_status").val();
+
+      $.ajax({
+        url: "/person/" + id,
+        type: "put",
+        dataType: "json",
+        contentType: "application/json",
+        data: JSON.stringify({
+          id: id,
+          first_name: update_first_name,
+          last_name: update_last_name,
+          email: update_email,
+          status: update_status,
+        }),
+        success: function (data) {
+          console.log("success", data);
+        },
+        error: function (data) {
+          console.log("error", data);
+          alert("error loading from database...");
+        },
+      }).then(setTimeout(location.reload.bind(location), 200));
+    });
+
+    $(".delete_button").click(function (id) {
+      id = this.id;
+      console.log(id);
+
+      $.ajax({
+        url: "/person/" + id,
+        type: "delete",
+        dataType: "json",
+        contentType: "application/json",
+        data: JSON.stringify({
+          id: id,
+        }),
+        success: function (id) {
+          console.log("success", id);
+        },
+        error: function (id) {
+          console.log("error", id);
+          alert("error loading from database...");
+        },
+      }).then(setTimeout(location.reload.bind(location), 200));
+    });
+  });
+</script>
+
+{% endblock %}
