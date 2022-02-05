@@ -13,6 +13,16 @@
     <div class="col md-12">
       <div class="jumbotron">
         <form class="row g-3 mb-5 mt-1" id="myForm">
+          <!-- <div class="col-2">
+            <label for="global_id" class="visually-hidden">Global ID</label>
+            <input
+              name="global_id"
+              type="text"
+              class="form-control"
+              id="global_id"
+              placeholder="Enter persons Global ID"
+            />
+          </div> -->
           <div class="col-2">
             <label for="first_name" class="visually-hidden">First Name</label>
             <input
@@ -45,6 +55,25 @@
             />
           </div>
           <div class="col-2">
+            <label for="username" class="visually-hidden">Username</label>
+            <input
+              name="username"
+              type="text"
+              class="form-control"
+              id="username"
+              placeholder="Enter persons username"
+            />
+          </div>
+          <div class="col-2">
+            <label for="status" class="visually-hidden">Status</label>
+            <div>
+              <select id="status" name="status" class="form-control" >
+                <option value="admin">Admin</option>
+                <option value="user" selected>User</option>
+              </select>
+            </div>
+          </div>
+          <!-- <div class="col-2">
             <label for="status" class="visually-hidden">Status</label>
             <input
               name="status"
@@ -53,7 +82,7 @@
               id="status"
               placeholder="Admin / User"
             />
-          </div>
+          </div> -->
           <div class="col-2 mt-2">
             <button id="add_button" type="submit" class="btn btn-primary mt-4">
               Add Person
@@ -71,7 +100,7 @@
         </form>
 
         <form class="row g-3 mb-5 mt-1" id="updateForm">
-          <div class="col-1">
+          <!-- <div class="col-1">
             <label for="update_id" class="visually-hidden">ID</label>
             <input
               name="update_id"
@@ -79,6 +108,17 @@
               class="form-control"
               id="update_id"
               required="required"
+            />
+          </div> -->
+          <div class="col-2">
+            <label for="update_global_id" class="visually-hidden"
+              >Update Global ID</label
+            >
+            <input
+              name="update_global_id"
+              type="text"
+              class="form-control update_global_id"
+              id="update_global_id"
             />
           </div>
           <div class="col-2">
@@ -115,6 +155,26 @@
             />
           </div>
           <div class="col-2">
+            <label for="update_username" class="visually-hidden"
+              >Update Username</label
+            >
+            <input
+              name="update_username"
+              type=""
+              class="form-control update_username"
+              id="update_username"
+            />
+          </div>
+          <div class="col-2">
+            <label for="update_status" class="visually-hidden">Status</label>
+            <div>
+              <select id="update_status" name="update_status" class="form-control update_status">
+                <option value="admin">Admin</option>
+                <option value="user" selected>User</option>
+              </select>
+            </div>
+          </div>
+          <!-- <div class="col-2">
             <label for="update_status" class="visually-hidden"
               >Update Status</label
             >
@@ -124,7 +184,7 @@
               class="form-control update_status"
               id="update_status"
             />
-          </div>
+          </div> -->
           <div class="col-3 mt-2">
             <button
               id="update_button"
@@ -139,10 +199,11 @@
         <table class="table" id="data_table">
           <thead>
             <tr>
-              <th>ID</th>
+              <th>global_id</th>
               <th>First Name</th>
               <th>Last Name</th>
               <th>Email</th>
+              <th>Username</th>
               <th>Status</th>
               <th>Action</th>
             </tr>
@@ -150,10 +211,11 @@
           <tbody>
             {%for person in persons%}
             <tr>
-              <td>{{person.id}}</td>
+              <td>{{person.global_id}}</td>
               <td>{{person.first_name}}</td>
               <td>{{person.last_name}}</td>
               <td>{{person.email}}</td>
+              <td>{{person.username}}</td>
               <td>{{person.status}}</td>
               <td>
                 <!-- <a class="btn btn-warning btn-xs edit_button" id="{{person.id}}"
@@ -161,7 +223,7 @@
                 > -->
                 <a
                   class="btn btn-danger btn-xs delete_button"
-                  id="{{person.id}}"
+                  id="{{person.global_id}}"
                   >Delete</a
                 >
               </td>
@@ -181,6 +243,8 @@
     var last_name;
     var email;
     var status;
+    var username;
+    var global_id;
 
     $("#log_out_button").click(function () {
       $.ajax({
@@ -206,29 +270,23 @@
       last_name = $("#last_name").val();
       email = $("#email").val();
       status = $("#status").val();
+      username = $("#username").val();
+      // global_id = $("#global_id").val();
 
       var data = JSON.stringify({
         first_name: first_name,
         last_name: last_name,
         email: email,
+        username: username,
         status: status,
+        // global_id: global_id,
       });
-      // data = $(this).serialize()
-      console.log(data);
-      // data = JSON.parse(data)
-      // console.log(data)
 
       $.ajax({
         url: "/person",
         type: "POST",
         dataType: "json",
         contentType: "application/json",
-        // data: JSON.stringify({
-        //   first_name: first_name,
-        //   last_name: last_name,
-        //   email: email,
-        //   status: status,
-        // }),
         data: data,
         success: function (data) {
           console.log("success", data);
@@ -238,51 +296,56 @@
           console.log("error", data);
           alert("error loading from database...");
         },
-      }); //.then(setTimeout(location.reload.bind(location), 200000));
-    });
-
-    $(".edit_button").click(function (id) {
-      id = this.id;
-
-      $.ajax({
-        url: "/person/" + id,
-        type: "post",
-        dataType: "json",
-        contentType: "application/json",
-        success: function (data) {
-          $($("#updateForm")[0].update_id).val(data.id);
-          $($("#updateForm")[0].update_first_name).val(data.first_name);
-          $($("#updateForm")[0].update_last_name).val(data.last_name);
-          $($("#updateForm")[0].update_email).val(data.email);
-          $($("#updateForm")[0].update_status).val(data.status);
-          setTimeout(location.reload, 300);
-          console.log(data);
-        },
-        error: function (data) {
-          console.log("error", data);
-          alert("error loading from database...");
-        },
       });
     });
-    $("#update_button").click(function (id) {
-      console.log(id);
-      id = $("#update_id").val();
+
+    // $(".edit_button").click(function (id) {
+    //   id = this.id;
+
+    //   $.ajax({
+    //     url: "/person/" + id,
+    //     type: "post",
+    //     dataType: "json",
+    //     contentType: "application/json",
+    //     success: function (data) {
+    //       $($("#updateForm")[0].update_id).val(data.id);
+    //       $($("#updateForm")[0].update_first_name).val(data.first_name);
+    //       $($("#updateForm")[0].update_last_name).val(data.last_name);
+    //       $($("#updateForm")[0].update_email).val(data.email);
+    //       $($("#updateForm")[0].update_username).val(data.username);
+    //       $($("#updateForm")[0].update_status).val(data.status);
+    //       setTimeout(location.reload, 300);
+    //       console.log(data);
+    //     },
+    //     error: function (data) {
+    //       console.log("error", data);
+    //       alert("error loading from database...");
+    //     },
+    //   });
+    // });
+    $("#update_button").click(function () {
+      // console.log(id);
+      // id = $("#update_id").val();
       update_first_name = $("#update_first_name").val();
       update_last_name = $("#update_last_name").val();
       update_email = $("#update_email").val();
+      update_username = $("#update_username").val();
       update_status = $("#update_status").val();
+      update_global_id = $("#update_global_id").val();
 
       $.ajax({
-        url: "/person/" + id,
+        url: "/person/" + update_global_id,
         type: "put",
         dataType: "json",
         contentType: "application/json",
         data: JSON.stringify({
-          id: id,
+          // id: id,
           first_name: update_first_name,
           last_name: update_last_name,
           email: update_email,
+          username: update_username,
           status: update_status,
+          global_id: update_global_id,
         }),
         success: function (data) {
           console.log("success", data);
@@ -296,6 +359,7 @@
 
     $(".delete_button").click(function (id) {
       id = this.id;
+      console.log("test");
       console.log(id);
 
       $.ajax({

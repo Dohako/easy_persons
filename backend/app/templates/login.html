@@ -35,10 +35,18 @@
     <div class="flex items-center justify-between">
       <button
         type="submit"
-        
         class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
       >
         Sign In
+      </button>
+    </div>
+    <div class="flex items-center justify-between">
+      <button
+        type="button"
+        id="register_button"
+        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+      >
+        Register
       </button>
     </div>
     <div id="BadLogin" class="bad_login">
@@ -53,10 +61,33 @@
   $(document).ready(function () {
     var badLogin = document.getElementById("BadLogin");
     badLogin.style.display = "none";
+
+    $("#register_button").click(function () {
+      var username = $("#username").val();
+      var hashed_password = $("#password").val();
+
+      var data = JSON.stringify({
+        username: username,
+        hashed_password: hashed_password,
+      });
+      console.log(data);
+      $.ajax({
+        url: "/register",
+        type: "POST",
+        dataType: "json",
+        contentType: "application/json",
+        data: data,
+        success: function (data) {
+          console.log("success", data);
+        },
+        error: function () {
+          console.log("error", data);
+          alert("error loading from database...");
+        },
+      });
+    });
+
     $("#loginform").submit(function (e) {
-      // console.log($(this).serialize());
-      // var temp_data = $(this).serialize();
-      // console.log(temp_data);
       e.preventDefault();
       $.ajax({
         type: "POST",
@@ -83,5 +114,4 @@
     });
   });
 </script>
-<!-- </html> -->
 {% endblock %}

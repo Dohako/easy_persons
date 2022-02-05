@@ -1,9 +1,12 @@
 import databases
+from fastapi_users_db_sqlalchemy import ForeignKey
 import sqlalchemy
+from ..utils.d_utils import PsqlEnv
 
 
 def setup_db():
-    DATABASE_URL = "postgresql://postgres:92292400Sql@localhost/persons"
+    env = PsqlEnv()
+    DATABASE_URL = env.get_env_url()
 
     database = databases.Database(DATABASE_URL)
 
@@ -13,25 +16,27 @@ def setup_db():
         "persons",
         metadata,
         sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
+        sqlalchemy.Column("global_id", sqlalchemy.Integer),
         sqlalchemy.Column("first_name", sqlalchemy.String),
         sqlalchemy.Column("last_name", sqlalchemy.String),
+        sqlalchemy.Column("username", sqlalchemy.String, unique=True),
         sqlalchemy.Column("email", sqlalchemy.String),
         sqlalchemy.Column("status", sqlalchemy.String),
+        sqlalchemy.Column("disabled", sqlalchemy.Boolean),
     )
 
     users = sqlalchemy.Table(
         "users",
         metadata,
         sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
-        sqlalchemy.Column("login", sqlalchemy.String),
-        sqlalchemy.Column("password", sqlalchemy.String),
+        sqlalchemy.Column("global_id", sqlalchemy.Integer),
+        sqlalchemy.Column("username", sqlalchemy.String, unique=True),
+        sqlalchemy.Column("hashed_password", sqlalchemy.String, nullable=False),
         sqlalchemy.Column("status", sqlalchemy.String),
+        sqlalchemy.Column("disabled", sqlalchemy.Boolean),
     )
 
-
-    engine = sqlalchemy.create_engine(
-        DATABASE_URL
-    )
+    engine = sqlalchemy.create_engine(DATABASE_URL)
     metadata.create_all(engine)
 
     return database, persons, users
