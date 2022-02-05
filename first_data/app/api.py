@@ -40,6 +40,20 @@ async def get_data(request:Request):
 
     return sorted_data
 
+
+@app.post("/get_by_user_id")
+async def get_by_user_id(user:schemas.User): 
+    logger.info(f"got request for user by id {user}")
+    query = users_base.select().where(users_base.columns.username==user.username)
+    result = await database.execute(query)
+    logger.info(result)
+    if not result:
+        return {"error": "username is not in database"}
+
+    data = await database.fetch_all(query)
+    user = schemas.User(**data[0])
+    return user
+
 @app.post("/data", status_code=201)
 async def insert_person(person: schemas.Person):
     query = users_base.insert().values(

@@ -1,7 +1,8 @@
 import asyncio
 import httpx
-from ..utils import schemas
 import json
+
+from ..utils import schemas
 
 FIRST_URL = "http://dohako.com:8001/"
 SECOND_URL = "http://dohako.com:8002/"
@@ -63,14 +64,16 @@ async def request_func(
     request_type: str,
     data: schemas.User | schemas.Person | None = None,
     person_id: str | None = None,
+    username: str | None = None
 ):
     if request_type == "put":
         response = await client.put(url, json=data.__dict__)
     elif request_type == "post":
         response = await client.post(url, json=data.__dict__)
     elif request_type == "delete":
-        print(url)
         response = await client.delete(url)
+    elif request_type == "auth":
+        response = await client.post(url, json={"username":username})
     else:
         response = await client.get(url)
     return json.loads(response.text)
@@ -100,6 +103,7 @@ async def set_async_request(
     request_type: str,
     data: schemas.User | schemas.Person | None = None,
     person_id: str | None = None,
+    username: str | None = None
 ):
 
     async with httpx.AsyncClient(timeout=2) as client:
@@ -115,6 +119,16 @@ async def set_async_request(
                     client=client,
                     url=url + f"data/{person_id}",
                     request_type=request_type,
+                )
+                for url in BASE_URLS
+            ]
+        elif request_type == "auth":
+            tasks = [
+                request_func(
+                    client=client,
+                    url=url + f"get_by_user_id",
+                    request_type="auth",
+                    username=username
                 )
                 for url in BASE_URLS
             ]

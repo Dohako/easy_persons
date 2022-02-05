@@ -7,6 +7,11 @@ from dotenv import load_dotenv
 from os import getenv, path
 
 
+def list_from_list_of_lists(some_list: list):
+    test = [item for sublist in some_list for item in sublist]
+    return test
+
+
 def check_and_load_env(func):
     """
     wrapper for checking if env exists and loading it to current work process if it exists.
