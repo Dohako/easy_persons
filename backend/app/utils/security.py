@@ -31,24 +31,24 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 async def get_this_user(username):
-    query = users_base.select().where(users_base.columns.username==username)
-    await database.connect()
-    result = await database.execute(query)
-    print(result)
-    if not result:
-        return {"error": "username is not in database"}
+    # query = users_base.select().where(users_base.columns.username==username)
+    # await database.connect()
+    # result = await database.execute(query)
+    # print(result)
+    # if not result:
+    #     return {"error": "username is not in database"}
 
-    data = await database.fetch_all(query)
-    await database.disconnect()
-    user = schemas.User(**data[0])
+    # data = await database.fetch_all(query)
+    # await database.disconnect()
+    # user = schemas.User(**data[0])
 
     user2 = await set_async_request(request_type="auth", username=username)
     print(user2)
     for user_from_base in user2:
-        if "detail" not in user_from_base.keys():
+        if "detail" not in user_from_base.keys() and "error" not in user_from_base.keys():
             result_user = schemas.User(**user_from_base)
     print(result_user)
-    print(user)
+    # print(user)
     
     return result_user
 

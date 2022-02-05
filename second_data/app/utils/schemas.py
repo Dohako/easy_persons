@@ -5,7 +5,7 @@ from typing import Optional
 class User(BaseModel):
     global_id: Optional[int] = None
     username: str
-    hashed_password: str
+    hashed_password: Optional[str] = None 
     status: str = "user"
     disabled: bool = False
 
