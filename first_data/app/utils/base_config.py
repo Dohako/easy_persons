@@ -1,13 +1,15 @@
 import databases
-from fastapi_users_db_sqlalchemy import ForeignKey
 import sqlalchemy
 from ..utils.d_utils import PsqlEnv
 
 
 def setup_db():
+    """
+    Get env vars and create db if they don't exists
+    returns database object and tables objects
+    """
     env = PsqlEnv()
     DATABASE_URL = env.get_env_url()
-    # DATABASE_URL = "sqlite+aiosqlite:///./test.db"
 
     database = databases.Database(DATABASE_URL)
 
@@ -37,10 +39,7 @@ def setup_db():
         sqlalchemy.Column("disabled", sqlalchemy.Boolean),
     )
 
-
-    engine = sqlalchemy.create_engine(
-        DATABASE_URL
-    )
+    engine = sqlalchemy.create_engine(DATABASE_URL)
     metadata.create_all(engine)
 
     return database, persons, users

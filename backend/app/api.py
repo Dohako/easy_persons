@@ -6,10 +6,8 @@ from starlette.responses import RedirectResponse
 
 from typing import List
 from loguru import logger
-from asyncpg import exceptions
 
 from .utils import schemas
-from .utils.base_config import setup_db
 from .utils.async_requests import set_async_request
 from .utils.security import user_login, get_current_active_user, get_password_hash
 from .utils.d_utils import list_from_list_of_lists
@@ -34,18 +32,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-database, persons_base, users_base = setup_db()
-
-
-@app.on_event("startup")
-async def startup():
-    await database.connect()
-
-
-@app.on_event("shutdown")
-async def shutdown():
-    await database.disconnect()
-
 
 @app.get("/logout")
 async def route_logout_and_remove_cookie():
@@ -61,87 +47,9 @@ async def logout_user():
     return {"success": "1"}
 
 
-@app.post("/auth_ok")
-async def auth_user():
-    # temp function to return success for ajax
-    return {"success": "1"}
-
-
-@app.post("/auth")
-async def login_basic(
-    username: str | None = Form(...), password: str | None = Form(...)
-):
-    return await user_login(username, password)
-
-
 @app.get("/login", response_class=HTMLResponse)
 def login(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
-
-    # here i need to get vals from dict and sort and find max
-
-
-# async def get_max_global_id():
-#     query = persons_base.select()
-#     data = await database.fetch_all(query)
-#     sorted_data = sorted(data, key=lambda d: d["global_id"])
-#     test = []
-#     for data in sorted_data:
-#         test.append(data.get("global_id"))
-#     return test
-# print(first_missing_number(test))
-
-
-@app.post("/register")
-async def register(create_user: schemas.User):
-    print(create_user)
-
-    first_row_query = users_base.select().where(users_base.columns.id == 1)
-    first_row = await database.execute(first_row_query)
-
-    # data = await database.fetch_all(first_row_query)
-    # # a,b,c,d,e,f = **data[0]
-    # a = schemas.UserInDB(**data[0])
-    # print(a)
-
-    if first_row:
-        create_user.status = "user"
-    else:
-        create_user.status = "admin"
-    # TBD check user exists
-    create_user.hashed_password = get_password_hash(create_user.hashed_password)
-    create_user.disabled = False
-
-    await set_async_request(data=create_user, request_type="post")
-
-    query = users_base.insert().values(
-        username=create_user.username,
-        hashed_password=create_user.hashed_password,
-        global_id=create_user.global_id,
-        status=create_user.status,
-        disabled=create_user.disabled,
-    )
-    try:
-        await database.execute(query)
-    except exceptions.UniqueViolationError:
-        return {"error": "this username is already taken"}
-    query = persons_base.insert().values(
-        username=create_user.username,
-        global_id=create_user.global_id,
-        status=create_user.status,
-        disabled=create_user.disabled,
-    )
-    await database.execute(query)
-
-    return {"success": "1"}
-
-
-@app.post("/change_pass")
-async def change_pass():
-    ...
-
-
-# main
 
 
 @app.get("/home", response_model=List[schemas.Person], response_class=HTMLResponse)
@@ -169,7 +77,44 @@ async def read_persons(request: Request, current_user=Depends(get_current_active
     return template
 
 
-# create update delete
+@app.post("/auth_ok")
+async def auth_user():
+    # temp function to return success for ajax
+    return {"success": "1"}
+
+
+@app.post("/auth")
+async def login_basic(
+    username: str | None = Form(...), password: str | None = Form(...)
+):
+    return await user_login(username, password)
+
+
+@app.post("/register")
+async def register(create_user: schemas.User):
+    print(create_user)
+
+    data_in_dbs = await set_async_request(request_type="get")
+    logger.info(data_in_dbs)  # check on empty bases
+    for data in data_in_dbs:
+        if data:
+            create_user.status = "user"
+            break
+    else:
+        create_user.status = "admin"
+
+    logger.info(create_user.hashed_password)
+    create_user.hashed_password = get_password_hash(create_user.hashed_password)
+    create_user.disabled = False
+
+    await set_async_request(data=create_user, request_type="register")
+
+    return {"success": "1"}
+
+
+@app.post("/change_pass")
+async def change_pass():
+    ...
 
 
 @app.post("/person")

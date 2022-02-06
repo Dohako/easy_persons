@@ -290,13 +290,12 @@
         data: data,
         success: function (data) {
           console.log("success", data);
-          setTimeout(location.reload, 300);
         },
         error: function () {
           console.log("error", data);
           alert("error loading from database...");
         },
-      });
+      }).then(setTimeout(location.reload.bind(location), 200));
     });
 
     // $(".edit_button").click(function (id) {

@@ -15,14 +15,12 @@ from starlette.responses import RedirectResponse
 from starlette.requests import Request as R
 
 from ..utils import schemas
-from ..utils.base_config import setup_db
 from ..utils.async_requests import set_async_request
 
 SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-database, _, users_base = setup_db()
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -30,27 +28,18 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 def get_password_hash(password):
     return pwd_context.hash(password)
 
+
 async def get_this_user(username):
-    # query = users_base.select().where(users_base.columns.username==username)
-    # await database.connect()
-    # result = await database.execute(query)
-    # print(result)
-    # if not result:
-    #     return {"error": "username is not in database"}
-
-    # data = await database.fetch_all(query)
-    # await database.disconnect()
-    # user = schemas.User(**data[0])
-
-    user2 = await set_async_request(request_type="auth", username=username)
-    print(user2)
-    for user_from_base in user2:
-        if "detail" not in user_from_base.keys() and "error" not in user_from_base.keys():
+    users = await set_async_request(request_type="auth", username=username)
+    for user_from_base in users:
+        if (
+            "detail" not in user_from_base.keys()
+            and "error" not in user_from_base.keys()
+        ):
             result_user = schemas.User(**user_from_base)
-    print(result_user)
-    # print(user)
-    
-    return result_user
+            return result_user
+    else:
+        return None
 
 
 class OAuth2PasswordBearerCookie(OAuth2):
@@ -145,7 +134,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 async def get_current_active_user(
     current_user: schemas.User = Depends(get_current_user),
 ):
-    if not current_user or (type(current_user) is dict and current_user['error']):
+    if not current_user or (type(current_user) is dict and current_user["error"]):
         return "not logged"
     if current_user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")
@@ -177,5 +166,5 @@ async def user_login(username, password):
 
     except Exception as ex:
         response = RedirectResponse(url="/login", status_code=304)
-    
+
     return response
