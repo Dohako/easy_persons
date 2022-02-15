@@ -1,6 +1,8 @@
 # easy_persons
 
-For controlling employees and other things
+This is my implementation of system, that allow controll access for different persons to admin/user info and actions.
+
+This system is using 3 databases that it reaching through API. Bases can be whatever you want, for the project it is a psql.
 
 ## Main stack
 
